@@ -1,31 +1,25 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-"use client"
+// app/rpp/page.tsx
+"use client";
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react";
 import { Form, Input, message, Button, Checkbox, Upload, Typography, Row, Col, Select, Divider } from 'antd';
-import 'react-quill/dist/quill.snow.css';
 import RichTextEditor from "@/components/ReactQuill";
-import { exportPdfFromElement } from "@/utils/exportPdf";
-import ReportPdf from "@/components/ReportPdf";
 import * as XLSX from "xlsx";
+import { useRouter } from 'next/navigation';
 
 const { Title } = Typography;
 
 interface Question {
   no: number;
   soal: string;
-  pilihan: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
+  pilihan: { A: string; B: string; C: string; D: string };
 }
 
 const semester_options = [
-  { "value": "1 / Ganjil", "label": "1 / Ganjil" },
-  { "value": "2 / Genap", "label": "2 / Genap" }
-]
+  { value: "1 / Ganjil", label: "1 / Ganjil" },
+  { value: "2 / Genap", label: "2 / Genap" }
+];
+
 const profil_kelulusan = [
   "DPL 1 Keimanan dan Ketaqwaan terhadap Tuhan YME",
   "DPL 2 Kewarganegaraan",
@@ -35,15 +29,13 @@ const profil_kelulusan = [
   "DPL 6 Kemandirian",
   "DPL 7 Kesehatan",
   "DPL 8 Komunikasai",
-]
+];
 
 const parseExcelQuestions = async (file: File): Promise<Question[]> => {
   const data = await file.arrayBuffer();
   const workbook = XLSX.read(data, { type: "array" });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
   const json = XLSX.utils.sheet_to_json<any>(sheet);
-
   return json.map((row) => ({
     no: Number(row["No"]),
     soal: row["Soal"],
@@ -56,51 +48,65 @@ const parseExcelQuestions = async (file: File): Promise<Question[]> => {
   }));
 };
 
-const MyForm: React.FC = () => {
+const RPPFormPage = () => {
   const [form] = Form.useForm();
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [pdfData, setPdfData] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
   const FORM_CACHE_KEY = "rpp-form-cache";
+  const QUESTIONS_CACHE_KEY = "rpp-questions";
+
+  useEffect(() => {
+    const cached = localStorage.getItem(FORM_CACHE_KEY);
+    const cachedQuestions = localStorage.getItem(QUESTIONS_CACHE_KEY);
+    if (cached) {
+      try {
+        form.setFieldsValue(JSON.parse(cached));
+      } catch (e) {
+        console.warn("Failed to restore form cache");
+      }
+    }
+    if (cachedQuestions) {
+      try {
+        setQuestions(JSON.parse(cachedQuestions));
+      } catch (e) {
+        console.warn("Failed to restore questions");
+      }
+    }
+  }, [form]);
 
   const onValuesChange = (_: any, allValues: any) => {
     localStorage.setItem(FORM_CACHE_KEY, JSON.stringify(allValues));
   };
 
+  const resetFields = () => {
+    form.resetFields();
+    localStorage.removeItem(FORM_CACHE_KEY);
+    localStorage.removeItem(QUESTIONS_CACHE_KEY);
+    setQuestions([]);
+    message.success("Form berhasil dikosongkan");
+  };
+
   const handleExcelUpload = async (file: File) => {
     const parsed = await parseExcelQuestions(file);
     setQuestions(parsed);
+    localStorage.setItem(QUESTIONS_CACHE_KEY, JSON.stringify(parsed));
     return false;
   };
 
-  React.useEffect(() => {
-    const cached = localStorage.getItem(FORM_CACHE_KEY);
-    if (cached) {
-      form.setFieldsValue(JSON.parse(cached));
+  const onFinish = (values: any) => {
+    localStorage.setItem(FORM_CACHE_KEY, JSON.stringify(values));
+    if (questions.length > 0) {
+      localStorage.setItem(QUESTIONS_CACHE_KEY, JSON.stringify(questions));
     }
-  }, [form]);
-
-  const onFinish = async (values: any) => {
-    setLoading(true);
-    try {
-      setPdfData(values);
-
-      await new Promise((r) => setTimeout(r, 300));
-
-      await exportPdfFromElement("pdf-report", "RPP.pdf");
-    } catch (err) {
-      console.error(err);
-      message.error("Gagal Menggenerate RPP!");
-    } finally {
-      setLoading(false);
-    }
+    router.push('/download');
   };
 
   return (
-    <div className="max-w-[900px] m-auto p-[20px] bg-[#fff] rounded-[8px]">
-      <Title level={3} style={{ color: '#00ADB5', textAlign: 'center' }}>
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-md">
+      <Title level={3} className="text-center text-[#00ADB5] mb-6">
         Educourse Kurikulum RPP
       </Title>
+
       <Form onValuesChange={onValuesChange} form={form} onFinish={onFinish} layout="vertical">
         <Row gutter={16}>
           <Col md={8}>
@@ -175,10 +181,10 @@ const MyForm: React.FC = () => {
           </Col>
 
 
-          <Divider />
-          <Title level={4} style={{ color: '#00ADB5', textAlign: 'center' }}>
-            KERANGKA PEMBELAJARAN
-          </Title>
+          <Col xs={24}>
+            <Divider />
+            <Title level={4} className="text-center text-[#00ADB5]">KERANGKA PEMBELAJARAN</Title>
+          </Col>
 
           <Col className="mb-8" span={24}>
             <Form.Item
@@ -200,13 +206,16 @@ const MyForm: React.FC = () => {
 
           <Divider />
 
-          <Form.Item shouldUpdate>
-            {({ getFieldValue }) => (
-              <Title level={3} style={{ color: "#00ADB5", textAlign: "center" }}>
-                {getFieldValue("pertemuan_ke") || "Pertemuan ke-..."}
-              </Title>
-            )}
-          </Form.Item>
+          <Col xs={24}>
+            <Divider />
+            <Form.Item shouldUpdate>
+              {({ getFieldValue }) => (
+                <Title level={3} className="text-center text-[#00ADB5]">
+                  {getFieldValue("pertemuan_ke") || "Pertemuan ke-..."}
+                </Title>
+              )}
+            </Form.Item>
+          </Col>
 
           <Col className="mb-8" span={24}>
             <Form.Item
@@ -267,26 +276,24 @@ const MyForm: React.FC = () => {
               </Upload>
             </Form.Item>
           </Col>
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              style={{ backgroundColor: '#00ADB5', borderColor: '#00ADB5', width: '100%' }}
-              loading={loading}
-            >
-              Submit
-            </Button>
-          </Form.Item>
+          <Col xs={24}>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                type="primary"
+                htmlType="submit"
+                className="flex-1 bg-[#00ADB5] border-[#00ADB5]"
+              >
+                Preview & Cetak
+              </Button>
+              <Button danger onClick={resetFields} className="flex-1">
+                Kosongkan Form
+              </Button>
+            </div>
+          </Col>
         </Row>
       </Form>
-      {pdfData && (
-        <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
-          <ReportPdf values={{ ...pdfData, questions }} />
-        </div>
-      )}
     </div>
   );
 };
 
-export default MyForm;
-
+export default RPPFormPage;
