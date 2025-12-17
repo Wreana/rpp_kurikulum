@@ -62,14 +62,14 @@ const RPPFormPage = () => {
       try {
         form.setFieldsValue(JSON.parse(cached));
       } catch (e) {
-        console.warn("Failed to restore form cache");
+        console.warn("Failed to restore form cache", e);
       }
     }
     if (cachedQuestions) {
       try {
         setQuestions(JSON.parse(cachedQuestions));
       } catch (e) {
-        console.warn("Failed to restore questions");
+        console.warn("Failed to restore questions", e);
       }
     }
   }, [form]);
