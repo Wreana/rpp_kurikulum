@@ -1,4 +1,40 @@
+import dayjs from "dayjs";
 import React from "react";
+
+const rubrik_penilaian = [
+  {
+    id: "1",
+    label: "Pemahaman konsep",
+    sangat_baik: "Menjelaskan secara mendalam dan jelas bagaimana perangkat keras dan lunak bekerja serta dampaknya di berbagai bidang.",
+    baik: "Menjelaskan konsep dengan cukup jelas, meskipun ada sedikit ketidakjelasan dalam detailnya.",
+    cukup: "Menunjukkan pemahaman dasar, tetapi kurang mendalam atau kurang relevan.",
+    perlu_ditingkatkan: "Tidak menunjukkan pemahaman yang jelas tentang perangkat keras dan lunak.",
+  },
+  {
+    id: "2",
+    label: "Kelengkapan Isi",
+    sangat_baik: "Menjelaskan satu bidang dengan sangat jelas dan mendalam atau beberapa bidang dengan cukup baik.",
+    baik: "Menjelaskan satu bidang dengan cukup baik atau beberapa bidang tapi kurang jelas.",
+    cukup: "Menjelaskan bidang yang dipilih dengan sedikit contoh atau kurang mendalam.",
+    perlu_ditingkatkan: "Tidak menjelaskan bidang yang diminta atau tidak memberikan contoh.",
+  },
+  {
+    id: "3",
+    label: "Penyusunan Ide",
+    sangat_baik: "Tulisan tersusun dengan rapi, mudah dibaca, dan mengalir dengan baik.",
+    baik: "Tulisan cukup rapi, tapi ada bagian yang kurang terhubung dengan baik.",
+    cukup: "Tulisan kurang rapi, ada bagian yang sulit dipahami.",
+    perlu_ditingkatkan: "Tulisan tidak rapi dan sulit dimengerti.",
+  },
+  {
+    id: "4",
+    label: "Kebenaran Informasi",
+    sangat_baik: "Informasi yang diberikan benar dan sesuai dengan kenyataan.",
+    baik: "Sebagian besar informasi benar, tetapi ada beberapa kesalahan kecil.",
+    cukup: "Ada beberapa informasi yang kurang tepat atau kurang jelas.",
+    perlu_ditingkatkan: "Banyak informasi yang salah atau tidak sesuai dengan kenyataan.",
+  },
+]
 
 interface ReportPdfProps {
   values: {
@@ -16,6 +52,9 @@ interface ReportPdfProps {
     referensi_guru?: string;
     media_pembelajaran?: string;
     nama_materi?: string;
+    nama_murid?: string;
+    tanggal?: Date;
+    rubrik_penilaian?: string[];
     questions?: Question[];
   };
 }
@@ -193,6 +232,63 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
       <DividerLine />
       <div className="mt-10">
         <SectionHeader title="Merefleksi (Berkesadaran, Bermakna, dan Menggembirakan)" />
+        {values.rubrik_penilaian && values.rubrik_penilaian.length > 0 && (
+          <>
+            <h1 className="flex justify-center items-center text-xl mb-10 font-bold">Rubrik Penulisan Tugas Akhir Esai Singkat</h1>
+
+            <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
+              <div><span className="font-medium">Nama Murid:</span> {values.nama_murid || "____________________"}</div>
+              <div>
+                <span className="font-medium">Tanggal:</span>{" "}
+                {values.tanggal
+                  ? dayjs(values.tanggal).format("DD MMMM YYYY")
+                  : "____________________"}
+              </div>
+            </div>
+
+            <SectionHeader title="Rubrik Penilaian Tugas Akhir Esai Singkat" />
+            <div className="mt-2">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-blue-50 font-bold">
+                    <th className="border border-gray-400 p-1">Kriteria</th>
+                    <th className="border border-gray-400 p-1">Sangat Baik<br />4</th>
+                    <th className="border border-gray-400 p-1">Baik<br />3</th>
+                    <th className="border border-gray-400 p-1">Cukup<br />2</th>
+                    <th className="border border-gray-400 p-1">Perlu Ditingkatkan<br />1</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rubrik_penilaian
+                    .filter(item =>
+                      Array.isArray(values.rubrik_penilaian) &&
+                      values.rubrik_penilaian.includes(item.id)
+                    )
+                    .map((item) => (
+                      <tr key={item.id}>
+                        <td className="border border-gray-400 p-1 align-top">{item.label}</td>
+                        <td className="border border-gray-400 p-1 align-top">{item.sangat_baik}</td>
+                        <td className="border border-gray-400 p-1 align-top">{item.baik}</td>
+                        <td className="border border-gray-400 p-1 align-top">{item.cukup}</td>
+                        <td className="border border-gray-400 p-1 align-top">{item.perlu_ditingkatkan}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="font-bold mt-3">TOTAL SKOR: ________ / 20</div>
+            <div className="text-sm mb-20 mt-2">
+              <strong>Keterangan:</strong>
+              <ul className="list-none mt-1 space-y-0.5">
+                <li>17 – 20 : Sangat Baik</li>
+                <li>13 – 16 : Baik</li>
+                <li>9 – 12 : Cukup</li>
+                <li>1 – 8 : Perlu Bimbingan</li>
+              </ul>
+            </div>
+          </>
+        )}
         <div
           className="quill-content"
           dangerouslySetInnerHTML={{ __html: values.refleksi || "" }}
