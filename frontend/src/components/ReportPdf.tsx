@@ -12,10 +12,11 @@ interface ReportPdfProps {
     memahami_berkesadaran?: string;
     mengaplikasi?: string;
     refleksi?: string;
-    questions?: Question[];
     pertemuan_ke?: string;
     referensi_guru?: string;
     media_pembelajaran?: string;
+    nama_materi?: string;
+    questions?: Question[];
   };
 }
 
@@ -73,6 +74,8 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
         }
       `}</style>
 
+      <h1 className="flex justify-center items-center text-xl font-bold">{values.nama_materi}</h1>
+
       <SectionHeader title="Informasi Umum" />
       <div className="ml-2">
         <div className="grid grid-cols-[140px_1fr] gap-y-1 text-sm">
@@ -87,50 +90,54 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
 
       <DividerLine />
 
-      <SectionHeader title="Dimensi Profil Lulusan" />
-      <ul className="ml-4 mt-1 space-y-1">
-        {(values.profil_kelulusan || []).map((item, idx) => (
-          <li key={idx} className="list-disc pl-1">{item}</li>
-        ))}
-      </ul>
-
-      <DividerLine />
-
-      <SectionHeader title="Tujuan Pembelajaran" />
-      <div className="ml-2 mt-1">
-        <p className="font-bold">Tujuan Pembelajaran:</p>
-        <p className="italic">Murid dapat memahami perangkat keras dan perangkat lunak komputer.</p>
-        <p className="font-bold mt-2">Kriteria Ketercapaian Tujuan Pembelajaran:</p>
-        <div
-          className="quill-content mt-1"
-          dangerouslySetInnerHTML={{ __html: values.tujuan_pembelajaran || "" }}
-        />
+      <div className="mt-10">
+        <SectionHeader title="Dimensi Profil Lulusan" />
+        <ul className="ml-4 mt-1 space-y-1">
+          {(values.profil_kelulusan || []).map((item, idx) => (
+            <li key={idx} className="list-disc pl-1">{item}</li>
+          ))}
+        </ul>
       </div>
 
       <DividerLine />
 
-      <SectionHeader title="Kerangka Pembelajaran" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-2 mt-2">
-        <div>
-          <p className="font-bold">Praktik Pedagogis</p>
-          <p className="mt-1">
-            Metode Pembelajaran: Pembelajaran berbasis inkuiri dan eksploratif
-          </p>
-          <p className="mt-2">
-            Strategi: Diskusi kelompok, demonstrasi, dan eksplorasi langsung perangkat keras & lunak
-          </p>
-        </div>
-        <div>
-          <p className="font-bold">Lingkungan Pembelajaran</p>
+      <div className="mt-10">
+        <SectionHeader title="Tujuan Pembelajaran" />
+        <div className="ml-2 mt-1">
+          <p className="font-bold">Tujuan Pembelajaran:</p>
+          <p className="italic">Murid dapat memahami perangkat keras dan perangkat lunak komputer.</p>
+          <p className="font-bold mt-2">Kriteria Ketercapaian Tujuan Pembelajaran:</p>
           <div
             className="quill-content mt-1"
-            dangerouslySetInnerHTML={{ __html: values.lingkugan_pembelajaran || "" }}
+            dangerouslySetInnerHTML={{ __html: values.tujuan_pembelajaran || "" }}
           />
         </div>
       </div>
 
       <DividerLine />
 
+      <div className="mt-10">
+        <SectionHeader title="Kerangka Pembelajaran" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-2 mt-2">
+          <div>
+            <p className="font-bold">Praktik Pedagogis</p>
+            <p className="mt-1">
+              Metode Pembelajaran: Pembelajaran berbasis inkuiri dan eksploratif
+            </p>
+            <p className="mt-2">
+              Strategi: Diskusi kelompok, demonstrasi, dan eksplorasi langsung perangkat keras & lunak
+            </p>
+          </div>
+          <div>
+            <p className="font-bold">Lingkungan Pembelajaran</p>
+            <div
+              className="quill-content mt-1"
+              dangerouslySetInnerHTML={{ __html: values.lingkugan_pembelajaran || "" }}
+            />
+          </div>
+        </div>
+
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-2 mt-2">
         <div>
           <p className="font-bold">Kemitraan Pembelajaran</p>
@@ -157,56 +164,64 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
         LANGKAH-LANGKAH PEMBELAJARAN
       </h1>
 
-      <div className="flex items-center gap-2 text-[#174C7A] font-semibold text-base border-b-2 border-blue-200 pb-1.5 mb-3">
-        <div className="w-5 h-5 rounded-full bg-[#9DBE6B] flex items-center justify-center text-white text-xs font-bold">
-          {pertemuanNumber}
+      <div className="mt-10">
+        <div className="flex items-center gap-2 text-[#174C7A] font-semibold text-base border-b-2 border-blue-200 pb-1.5 mb-3">
+          <div className="w-5 h-5 rounded-full bg-[#9DBE6B] flex items-center justify-center text-white text-xs font-bold">
+            {pertemuanNumber}
+          </div>
+          <span>{values.pertemuan_ke}</span>
         </div>
-        <span>{values.pertemuan_ke}</span>
       </div>
 
-      <SectionHeader title="Memahami (Berkesadaran)" />
-      <div
-        className="quill-content"
-        dangerouslySetInnerHTML={{ __html: values.memahami_berkesadaran || "" }}
-      />
+      <div className="mt-10">
+        <SectionHeader title="Memahami (Berkesadaran)" />
+        <div
+          className="quill-content"
+          dangerouslySetInnerHTML={{ __html: values.memahami_berkesadaran || "" }}
+        />
+      </div>
 
       <DividerLine />
-      <SectionHeader title="Mengaplikasi (Berkesadaran dan Menggembirakan)" />
-      <div
-        className="quill-content"
-        dangerouslySetInnerHTML={{ __html: values.mengaplikasi || "" }}
-      />
+      <div className="mt-10">
+        <SectionHeader title="Mengaplikasi (Berkesadaran dan Menggembirakan)" />
+        <div
+          className="quill-content"
+          dangerouslySetInnerHTML={{ __html: values.mengaplikasi || "" }}
+        />
+      </div>
 
       <DividerLine />
-      <SectionHeader title="Merefleksi (Berkesadaran, Bermakna, dan Menggembirakan)" />
-      <div
-        className="quill-content"
-        dangerouslySetInnerHTML={{ __html: values.refleksi || "" }}
-      />
+      <div className="mt-10">
+        <SectionHeader title="Merefleksi (Berkesadaran, Bermakna, dan Menggembirakan)" />
+        <div
+          className="quill-content"
+          dangerouslySetInnerHTML={{ __html: values.refleksi || "" }}
+        />
 
-      {values.questions && values.questions.length > 0 && (
-        <>
-          <SectionHeader title="Soal Evaluasi" />
-          <div className="ml-2 mt-1 space-y-4">
-            {values.questions.map((q) => (
-              <div key={q.no}>
-                <p className="font-bold">
-                  {q.no}. {q.soal}
-                </p>
-                <ul className="list-none mt-1 space-y-1">
-                  {Object.entries(q.pilihan).map(([key, text]) => (
-                    <li key={key}>
-                      <span className="font-bold">{key}.</span> {text}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+        {values.questions && values.questions.length > 0 && (
+          <div className="mt-10">
+            <SectionHeader title="Soal Evaluasi" />
+            <div className="ml-2 mt-1 space-y-4">
+              {values.questions.map((q) => (
+                <div key={q.no}>
+                  <p className="font-bold">
+                    {q.no}. {q.soal}
+                  </p>
+                  <ul className="list-none mt-1 space-y-1">
+                    {Object.entries(q.pilihan).map(([key, text]) => (
+                      <li key={key}>
+                        <span className="font-bold">{key}.</span> {text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
-        </>
-      )}
+        )}
+      </div>
 
-      <h2 className="text-base font-bold mt-4 mb-2">Catatan & Umpan Balik Pendidik:</h2>
+      <h2 className="text-base font-bold mt-10 mb-2">Catatan & Umpan Balik Pendidik:</h2>
       <div className="space-y-1 min-h-[70px]">
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="border-b border-dashed border-gray-500 min-h-[14px]"></div>
@@ -229,7 +244,7 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
         </li>
       </ul>
 
-      <h2 className="text-base font-bold text-[#0B4F8A] mt-4 mb-1">Asesmen Proses</h2>
+      <h2 className="text-base font-bold text-[#0B4F8A] mt-10 mb-1">Asesmen Proses</h2>
       <div className="font-semibold text-[#0B4F8A] border-b-2 border-[#6C8CFF] pb-1 mb-3">
         Contoh Lembar Observasi Murid
       </div>

@@ -52,7 +52,7 @@ const RPPFormPage = () => {
   const [form] = Form.useForm();
   const [questions, setQuestions] = useState<Question[]>([]);
   const router = useRouter();
-  const FORM_CACHE_KEY = "rpp-form-cache";
+  const FORM_CACHE_KEY = "rpp-form-cache"
   const QUESTIONS_CACHE_KEY = "rpp-questions";
 
   useEffect(() => {
@@ -109,6 +109,15 @@ const RPPFormPage = () => {
 
       <Form onValuesChange={onValuesChange} form={form} onFinish={onFinish} layout="vertical">
         <Row gutter={16}>
+          <Col md={24}>
+            <Form.Item
+              name="nama_materi"
+              label="Materi RPP"
+              rules={[{ required: true, message: 'Tolong Masukkan Materi!' }]}
+            >
+              <Input placeholder="E.g: Perencanaan Pembelajaran Koding dan KA Fase C (Kelas 5-6)" style={{ borderColor: '#00ADB5' }} />
+            </Form.Item>
+          </Col>
           <Col md={8}>
             <Form.Item
               name="pertemuan_ke"
@@ -291,8 +300,8 @@ const RPPFormPage = () => {
             </div>
           </Col>
         </Row>
-      </Form>
-    </div>
+      </Form >
+    </div >
   );
 };
 
