@@ -43,6 +43,8 @@ interface ReportPdfProps {
     waktu: string;
     profil_kelulusan?: string[];
     tujuan_pembelajaran?: string;
+    praktik_pedagogis?: string;
+    kemitraan_pembelajaran?: string;
     lingkugan_pembelajaran?: string;
     pemanfaatan_digital?: string;
     memahami_berkesadaran?: string;
@@ -55,20 +57,85 @@ interface ReportPdfProps {
     nama_murid?: string;
     tanggal?: Date;
     rubrik_penilaian?: string[];
-    questions?: Question[];
+    assessments: SanitizerAssessment;
   };
 }
 
-interface Question {
-  no: number;
-  soal: string;
-  pilihan: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
+interface AssessmentRow {
+  key: string;
+  aspek: string;
+  kurang: string;
+  cukup: string;
+  baik: string;
+  sangatBaik: string;
 }
+
+interface SanitizerAssessment {
+  awal: AssessmentData;
+  proses: AssessmentData;
+  akhir: AssessmentData;
+}
+
+interface AssessmentData {
+  description: string;
+  rows: AssessmentRow[];
+}
+
+const AssessmentTable = ({ rows }: { rows: AssessmentData['rows'] }) => {
+  if (!rows || rows.length === 0) return null;
+
+  return (
+    <div className="mt-2 overflow-x-auto">
+      <table className="min-w-full border-collapse border border-gray-300 text-sm">
+        <thead>
+          <tr className="bg-blue-100">
+            <th className="border border-gray-300 px-3 py-2 text-left font-bold">Aspek</th>
+            <th className="border border-gray-300 px-3 py-2 text-left font-bold">Kurang</th>
+            <th className="border border-gray-300 px-3 py-2 text-left font-bold">Cukup</th>
+            <th className="border border-gray-300 px-3 py-2 text-left font-bold">Baik</th>
+            <th className="border border-gray-300 px-3 py-2 text-left font-bold">Sangat Baik</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.key}>
+              <td className="border border-gray-300 px-3 py-2 bg-blue-100">
+                <div
+                  className="quill-content"
+                  dangerouslySetInnerHTML={{ __html: row.aspek || "" }}
+                />
+              </td>
+              <td className="border border-gray-300 px-3 py-2">
+                <div
+                  className="quill-content"
+                  dangerouslySetInnerHTML={{ __html: row.kurang || "" }}
+                />
+              </td>
+              <td className="border border-gray-300 px-3 py-2">
+                <div
+                  className="quill-content"
+                  dangerouslySetInnerHTML={{ __html: row.cukup || "" }}
+                />
+              </td>
+              <td className="border border-gray-300 px-3 py-2">
+                <div
+                  className="quill-content"
+                  dangerouslySetInnerHTML={{ __html: row.baik || "" }}
+                />
+              </td>
+              <td className="border border-gray-300 px-3 py-2">
+                <div
+                  className="quill-content"
+                  dangerouslySetInnerHTML={{ __html: row.sangatBaik || "" }}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
   <div className="bg-blue-100 px-3 py-2 mt-4 mb-2 font-bold text-sm uppercase tracking-wide">
@@ -78,7 +145,15 @@ const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
 
 const DividerLine = () => <div className="border-b-2 border-blue-200 my-2"></div>;
 
+const hasAssessmentContent = (assessment: AssessmentData | undefined): boolean => {
+  if (!assessment) return false;
+  const hasDesc = assessment.description?.trim() !== '';
+  const hasRows = assessment.rows?.length > 0;
+  return hasDesc || hasRows;
+};
+
 const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
+  console.log(values)
   const match = values.pertemuan_ke?.match(/Pertemuan ke-(\d+)/);
   const pertemuanNumber = match ? Number(match[1]) : null;
 
@@ -140,32 +215,30 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
 
       <DividerLine />
 
-      <div className="mt-10">
-        <SectionHeader title="Tujuan Pembelajaran" />
-        <div className="ml-2 mt-1">
-          <p className="font-bold">Tujuan Pembelajaran:</p>
-          <p className="italic">Murid dapat memahami perangkat keras dan perangkat lunak komputer.</p>
-          <p className="font-bold mt-2">Kriteria Ketercapaian Tujuan Pembelajaran:</p>
-          <div
-            className="quill-content mt-1"
-            dangerouslySetInnerHTML={{ __html: values.tujuan_pembelajaran || "" }}
-          />
-        </div>
-      </div>
-
-      <DividerLine />
+      {values.tujuan_pembelajaran && (
+        <>
+          <div className="mt-10">
+            <SectionHeader title="Tujuan Pembelajaran" />
+            <div className="ml-2 mt-1">
+              <div
+                className="quill-content mt-1"
+                dangerouslySetInnerHTML={{ __html: values.tujuan_pembelajaran || "" }}
+              />
+            </div>
+          </div>
+          <DividerLine />
+        </>
+      )}
 
       <div className="mt-10">
         <SectionHeader title="Kerangka Pembelajaran" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-2 mt-2">
           <div>
             <p className="font-bold">Praktik Pedagogis</p>
-            <p className="mt-1">
-              Metode Pembelajaran: Pembelajaran berbasis inkuiri dan eksploratif
-            </p>
-            <p className="mt-2">
-              Strategi: Diskusi kelompok, demonstrasi, dan eksplorasi langsung perangkat keras & lunak
-            </p>
+            <div
+              className="quill-content mt-1"
+              dangerouslySetInnerHTML={{ __html: values.praktik_pedagogis || "" }}
+            />
           </div>
           <div>
             <p className="font-bold">Lingkungan Pembelajaran</p>
@@ -180,13 +253,10 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-2 mt-2">
         <div>
           <p className="font-bold">Kemitraan Pembelajaran</p>
-          <p className="mt-1">
-            Kolaborasi dengan guru mata pelajaran lain dalam menjelaskan konsep perangkat keras
-            dan lunak di dalam sistem komputer, serta pemanfaatannya di berbagai bidang.
-          </p>
-          <p className="mt-2">
-            Melibatkan orang tua dalam kegiatan eksplorasi perangkat komputer di rumah.
-          </p>
+          <div
+            className="quill-content mt-1"
+            dangerouslySetInnerHTML={{ __html: values.kemitraan_pembelajaran || "" }}
+          />
         </div>
         <div>
           <p className="font-bold">Pemanfaatan Digital</p>
@@ -212,26 +282,37 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
         </div>
       </div>
 
-      <div className="mt-10">
-        <SectionHeader title="Memahami (Berkesadaran)" />
-        <div
-          className="quill-content"
-          dangerouslySetInnerHTML={{ __html: values.memahami_berkesadaran || "" }}
-        />
-      </div>
+      {values.memahami_berkesadaran && (
+        <div className="mt-10">
+          <SectionHeader title="Memahami (Berkesadaran)" />
+          <div
+            className="quill-content"
+            dangerouslySetInnerHTML={{ __html: values.memahami_berkesadaran || "" }}
+          />
+        </div>
+      )}
 
-      <DividerLine />
-      <div className="mt-10">
-        <SectionHeader title="Mengaplikasi (Berkesadaran dan Menggembirakan)" />
-        <div
-          className="quill-content"
-          dangerouslySetInnerHTML={{ __html: values.mengaplikasi || "" }}
-        />
-      </div>
+      {values.mengaplikasi && (
+        <>
+          <DividerLine />
+          <div className="mt-10">
+            <SectionHeader title="Mengaplikasi (Berkesadaran dan Menggembirakan)" />
+            <div
+              className="quill-content"
+              dangerouslySetInnerHTML={{ __html: values.mengaplikasi || "" }}
+            />
+          </div>
+        </>
+      )}
 
       <DividerLine />
       <div className="mt-10">
         <SectionHeader title="Merefleksi (Berkesadaran, Bermakna, dan Menggembirakan)" />
+        <div
+          className="quill-content"
+          dangerouslySetInnerHTML={{ __html: values.refleksi || "" }}
+        />
+
         {values.rubrik_penilaian && values.rubrik_penilaian.length > 0 && (
           <>
             <h1 className="flex justify-center items-center text-xl mb-10 font-bold">Rubrik Penulisan Tugas Akhir Esai Singkat</h1>
@@ -252,10 +333,11 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
                 <thead>
                   <tr className="bg-blue-50 font-bold">
                     <th className="border border-gray-400 p-1">Kriteria</th>
-                    <th className="border border-gray-400 p-1">Sangat Baik<br />4</th>
-                    <th className="border border-gray-400 p-1">Baik<br />3</th>
-                    <th className="border border-gray-400 p-1">Cukup<br />2</th>
-                    <th className="border border-gray-400 p-1">Perlu Ditingkatkan<br />1</th>
+                    <th className="border border-gray-400 p-1">Sangat Baik</th>
+                    <th className="border border-gray-400 p-1">Baik</th>
+                    <th className="border border-gray-400 p-1">Cukup</th>
+                    <th className="border border-gray-400 p-1">Perlu Ditingkatkan</th>
+                    <th className="border border-gray-400 p-1">Score</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -271,6 +353,7 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
                         <td className="border border-gray-400 p-1 align-top">{item.baik}</td>
                         <td className="border border-gray-400 p-1 align-top">{item.cukup}</td>
                         <td className="border border-gray-400 p-1 align-top">{item.perlu_ditingkatkan}</td>
+                        <td className="border border-gray-400 p-1 align-top"></td>
                       </tr>
                     ))}
                 </tbody>
@@ -289,32 +372,6 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
             </div>
           </>
         )}
-        <div
-          className="quill-content"
-          dangerouslySetInnerHTML={{ __html: values.refleksi || "" }}
-        />
-
-        {values.questions && values.questions.length > 0 && (
-          <div className="mt-10">
-            <SectionHeader title="Soal Evaluasi" />
-            <div className="ml-2 mt-1 space-y-4">
-              {values.questions.map((q) => (
-                <div key={q.no}>
-                  <p className="font-bold">
-                    {q.no}. {q.soal}
-                  </p>
-                  <ul className="list-none mt-1 space-y-1">
-                    {Object.entries(q.pilihan).map(([key, text]) => (
-                      <li key={key}>
-                        <span className="font-bold">{key}.</span> {text}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       <h2 className="text-base font-bold mt-10 mb-2">Catatan & Umpan Balik Pendidik:</h2>
@@ -324,27 +381,53 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
         ))}
       </div>
 
-      <SectionHeader title="Asesmen Pembelajaran" />
-      <ul className="ml-4 mt-1 space-y-2">
-        <li>
-          <span className="font-bold">Asesmen Awal:</span> Tanya jawab terkait pengalaman menggunakan
-          komputer (terlampir di langkah pembelajaran).
-        </li>
-        <li>
-          <span className="font-bold">Asesmen Proses:</span> Observasi saat diskusi, tugas kelompok, dan
-          simulasi.
-        </li>
-        <li>
-          <span className="font-bold">Asesmen Akhir:</span> Kuis dan tugas proyek esai singkat
-          (terlampir di langkah pembelajaran).
-        </li>
-      </ul>
+      {
+        (
+          hasAssessmentContent(values.assessments.awal) ||
+          hasAssessmentContent(values.assessments.proses) ||
+          hasAssessmentContent(values.assessments.akhir)
+        ) && (
+          <>
+            <SectionHeader title="Asesmen Pembelajaran" />
+            <ul className="ml-4 mt-1 space-y-2">
+              {hasAssessmentContent(values.assessments.awal) && (
+                <li>
+                  <span className="font-bold text-[#174C7A]">Asesmen Awal</span>
+                  <div
+                    className="quill-content"
+                    dangerouslySetInnerHTML={{ __html: values.assessments.awal.description || "" }}
+                  />
+                  <AssessmentTable rows={values.assessments.awal.rows} />
+                </li>
+              )}
 
-      <h2 className="text-base font-bold text-[#0B4F8A] mt-10 mb-1">Asesmen Proses</h2>
-      <div className="font-semibold text-[#0B4F8A] border-b-2 border-[#6C8CFF] pb-1 mb-3">
-        Contoh Lembar Observasi Murid
-      </div>
+              {hasAssessmentContent(values.assessments.proses) && (
+                <li>
+                  <span className="font-bold text-[#174C7A]">Asesmen Proses</span>
+                  <div
+                    className="quill-content"
+                    dangerouslySetInnerHTML={{ __html: values.assessments.proses.description || "" }}
+                  />
+                  <AssessmentTable rows={values.assessments.proses.rows} />
+                </li>
+              )}
 
+              {hasAssessmentContent(values.assessments.awal) && (
+                <li>
+                  <span className="font-bold text-[#174C7A]">Asesmen Akhir</span>
+                  <div
+                    className="quill-content"
+                    dangerouslySetInnerHTML={{ __html: values.assessments.akhir.description || "" }}
+                  />
+                  <AssessmentTable rows={values.assessments.akhir.rows} />
+                </li>
+              )}
+            </ul>
+          </>
+        )
+      }
+
+      <SectionHeader title="Lembar Observasi Murid" />
       <table className="w-full text-sm border-collapse">
         <tbody>
           <tr>
@@ -403,20 +486,32 @@ const ReportPdf: React.FC<ReportPdfProps> = ({ values }) => {
         </ul>
       </div>
 
-      <SectionHeader title="Media Pembelajaran" />
-      <div
-        className="quill-content"
-        dangerouslySetInnerHTML={{ __html: values.media_pembelajaran || "" }}
-      />
+      {
+        values.media_pembelajaran && (
+          <>
+            <SectionHeader title="Media Pembelajaran" />
+            <div
+              className="quill-content"
+              dangerouslySetInnerHTML={{ __html: values.media_pembelajaran || "" }}
+            />
+          </>
+        )
+      }
 
       <DividerLine />
-      <SectionHeader title="Referensi Pembelajaran Guru" />
-      <div
-        className="quill-content"
-        dangerouslySetInnerHTML={{ __html: values.referensi_guru || "" }}
-      />
-    </div>
+      {
+        values.referensi_guru && (
+          <>
+            <SectionHeader title="Referensi Pembelajaran Guru" />
+            <div
+              className="quill-content"
+              dangerouslySetInnerHTML={{ __html: values.referensi_guru || "" }}
+            />
+          </>
+        )
+      }
+    </div >
   );
 };
 
-export default ReportPdf;
+export default ReportPdf

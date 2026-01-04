@@ -1,17 +1,27 @@
 "use client";
 
+import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from "react";
-import { Form, Input, message, Button, Checkbox, Upload, Typography, Row, Col, Select, Divider, DatePicker } from 'antd';
-import RichTextEditor from "@/components/ReactQuill";
-import * as XLSX from "xlsx";
+import { Form, Input, message, Button, Checkbox, Typography, Row, Col, Select, Divider, DatePicker } from 'antd';
 import { useRouter } from 'next/navigation';
+
+const RichTextEditor = dynamic(() => import("@/components/ReactQuill"), { ssr: false });
+const AssessmentSection = dynamic(() => import("@/components/AsesmenForm"), { ssr: false });
 
 const { Title } = Typography;
 
-interface Question {
-  no: number;
-  soal: string;
-  pilihan: { A: string; B: string; C: string; D: string };
+interface AssessmentRow {
+  key: string;
+  aspek: string;
+  kurang: string;
+  cukup: string;
+  baik: string;
+  sangatBaik: string;
+}
+
+interface AssessmentData {
+  description: string;
+  rows: AssessmentRow[];
 }
 
 const semester_options = [
@@ -65,38 +75,30 @@ const rubrik_penilaian = [
   },
 ]
 
-const parseExcelQuestions = async (file: File): Promise<Question[]> => {
-  const data = await file.arrayBuffer();
-  const workbook = XLSX.read(data, { type: "array" });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const json = XLSX.utils.sheet_to_json<any>(sheet);
-  return json.map((row) => ({
-    no: Number(row["No"]),
-    soal: row["Soal"],
-    pilihan: {
-      A: row["Pilihan A"],
-      B: row["Pilihan B"],
-      C: row["Pilihan C"],
-      D: row["Pilihan D"],
-    },
-  }));
-};
-
 const RPPFormPage = () => {
   const [form] = Form.useForm();
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [assessments, setAssessments] = useState<{
+    awal: AssessmentData;
+    proses: AssessmentData;
+    akhir: AssessmentData;
+  }>({
+    awal: { description: '', rows: [] },
+    proses: { description: '', rows: [] },
+    akhir: { description: '', rows: [] },
+  });
+
+
   const router = useRouter();
   const FORM_CACHE_KEY = "rpp-form-cache"
-  const QUESTIONS_CACHE_KEY = "rpp-questions";
+  const ASESMEN_CACHE = "rpp-asesmen";
 
   useEffect(() => {
     const rawCached = localStorage.getItem(FORM_CACHE_KEY);
-    const cachedQuestions = localStorage.getItem(QUESTIONS_CACHE_KEY);
+    const cachedAssessments = localStorage.getItem(ASESMEN_CACHE);
 
     if (rawCached) {
       try {
         const parsed = JSON.parse(rawCached);
-        /* eslint-disable @typescript-eslint/no-unused-vars */
         const { tanggal, ...rest } = parsed;
         form.setFieldsValue(rest);
       } catch (e) {
@@ -104,14 +106,24 @@ const RPPFormPage = () => {
       }
     }
 
-    if (cachedQuestions) {
+    if (cachedAssessments) {
       try {
-        setQuestions(JSON.parse(cachedQuestions));
+        setAssessments(JSON.parse(cachedAssessments));
       } catch (e) {
         console.warn("Failed to restore questions", e);
       }
     }
   }, [form]);
+
+  const handleAssessmentChange = (
+    type: keyof typeof assessments,
+    data: AssessmentData
+  ) => {
+    setAssessments((prev) => ({
+      ...prev,
+      [type]: data,
+    }));
+  };
 
   const onValuesChange = (_: any, allValues: any) => {
     localStorage.setItem(FORM_CACHE_KEY, JSON.stringify(allValues));
@@ -120,22 +132,14 @@ const RPPFormPage = () => {
   const resetFields = () => {
     form.resetFields();
     localStorage.removeItem(FORM_CACHE_KEY);
-    localStorage.removeItem(QUESTIONS_CACHE_KEY);
-    setQuestions([]);
+    localStorage.removeItem(ASESMEN_CACHE);
     message.success("Form berhasil dikosongkan");
-  };
-
-  const handleExcelUpload = async (file: File) => {
-    const parsed = await parseExcelQuestions(file);
-    setQuestions(parsed);
-    localStorage.setItem(QUESTIONS_CACHE_KEY, JSON.stringify(parsed));
-    return false;
   };
 
   const onFinish = (values: any) => {
     localStorage.setItem(FORM_CACHE_KEY, JSON.stringify(values));
-    if (questions.length > 0) {
-      localStorage.setItem(QUESTIONS_CACHE_KEY, JSON.stringify(questions));
+    if (assessments) {
+      localStorage.setItem(ASESMEN_CACHE, JSON.stringify(assessments));
     }
     router.push('/download');
   };
@@ -232,6 +236,24 @@ const RPPFormPage = () => {
           <Col xs={24}>
             <Divider />
             <Title level={4} className="text-center text-[#00ADB5]">KERANGKA PEMBELAJARAN</Title>
+          </Col>
+
+          <Col className="mb-8" span={24}>
+            <Form.Item
+              name="praktik_pedagogis"
+              label="Praktik Pedagogis"
+            >
+              <RichTextEditor />
+            </Form.Item>
+          </Col>
+
+          <Col className="mb-8" span={24}>
+            <Form.Item
+              name="kemitraan_pembelajaran"
+              label="Kemitraan Pembelajaran"
+            >
+              <RichTextEditor />
+            </Form.Item>
           </Col>
 
           <Col className="mb-8" span={24}>
@@ -336,20 +358,28 @@ const RPPFormPage = () => {
             </Form.Item>
           </Col>
 
-          <Col className="mb-8" span={24}>
-            <Form.Item
-              name="soal"
-              label="Asesmen Siswa"
-            >
-              <Upload
-                beforeUpload={handleExcelUpload}
-                accept=".xlsx,.xls"
-                maxCount={1}
-              >
-                <Button>Upload Soal (Excel)</Button>
-              </Upload>
-            </Form.Item>
-          </Col>
+          <div style={{ maxWidth: '100%', overflowX: 'auto' }}>
+            <h2>Asesmen</h2>
+
+            <AssessmentSection
+              type="Awal"
+              initialData={assessments.awal}
+              onChange={(data) => handleAssessmentChange('awal', data)}
+            />
+
+            <AssessmentSection
+              type="Proses"
+              initialData={assessments.proses}
+              onChange={(data) => handleAssessmentChange('proses', data)}
+            />
+
+            <AssessmentSection
+              type="Akhir"
+              initialData={assessments.akhir}
+              onChange={(data) => handleAssessmentChange('akhir', data)}
+            />
+          </div>
+
           <Col xs={24}>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button

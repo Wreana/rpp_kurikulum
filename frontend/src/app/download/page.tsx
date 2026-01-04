@@ -7,13 +7,13 @@ import ReportPdf from "@/components/ReportPdf";
 
 const PreviewPage = () => {
   const [data, setData] = useState<any>(null);
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [assessments, setAssessments] = useState<any>({});
   const router = useRouter();
 
   useEffect(() => {
     try {
       const formData = localStorage.getItem("rpp-form-cache");
-      const questionsData = localStorage.getItem("rpp-questions");
+      const assesmentsData = localStorage.getItem("rpp-asesmen");
 
       if (!formData) {
         message.error("Tidak ada data formulir. Silakan isi form terlebih dahulu.");
@@ -22,7 +22,7 @@ const PreviewPage = () => {
       }
 
       setData(JSON.parse(formData));
-      setQuestions(questionsData ? JSON.parse(questionsData) : []);
+      setAssessments(assesmentsData ? JSON.parse(assesmentsData) : []);
     } catch (e) {
       console.error("Gagal memuat data preview", e);
       message.error("Gagal memuat data. Silakan coba lagi.");
@@ -58,13 +58,11 @@ const PreviewPage = () => {
           </Button>
         </div>
 
-        {/* The Report */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
-          <ReportPdf values={{ ...data, questions }} />
+          <ReportPdf values={{ ...data, assessments }} />
         </div>
       </div>
 
-      {/* Print-only CSS */}
       <style jsx global>{`
         @media print {
           body {
